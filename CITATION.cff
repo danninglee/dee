@@ -1,0 +1,22 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the paper below."
+title: "Diversified Expert Ensemble (DEE)"
+authors:
+  - family-names: "Li"
+    given-names: "Danning"
+version: 0.1.0
+license: MIT
+repository-code: "https://github.com/<your-account>/dee"
+preferred-citation:
+  type: conference-paper
+  title: "Diversification Across Predictors: Heterogeneous Ensemble Learning for Cross-Sectional Return Prediction"
+  authors:
+    - family-names: "Li"
+      given-names: "Danning"
+  conference:
+    name: "7th ACM International Conference on AI in Finance"
+    location: "Milan, Italy"
+    start: 2026-11-14
+    end: 2026-11-17
+  year: 2026
+  notes: "arXiv:XXXX.XXXXX"

@@ -1,0 +1,189 @@
+# Diversified Expert Ensemble (DEE)
+
+A reference implementation of **Diversification Across Predictors: Heterogeneous
+Ensemble Learning for Cross-Sectional Return Prediction**.
+
+> 📄 **Paper**: [arXiv:XXXX.XXXXX](https://arxiv.org/abs/XXXX.XXXXX)  <!-- TODO: replace -->
+>
+> 🌐 **Project page**: [https://example.org/dee](https://example.org/dee)  <!-- TODO: replace -->
+
+## Overview
+
+DEE combines linear and nonlinear predictors trained on independently
+bootstrap-sampled rows and randomly subsampled feature views. Averaging weakly
+correlated errors reduces variance in the same way that diversifying assets
+reduces portfolio risk. A validation-based information-coefficient filter
+removes degenerate experts before the final equal-weight aggregation.
+
+The implementation follows Algorithm 1 of the paper: every expert is updated
+inside one synchronous loop, and early stopping monitors the ensemble-level
+validation loss.
+
+## Installation
+
+```bash
+git clone https://github.com/<your-account>/dee.git
+cd dee
+pip install -e .
+```
+
+Requirements: Python ≥ 3.9, NumPy, pandas, SciPy, PyTorch.
+
+## Quick Start
+
+```bash
+python examples/synthetic_demo.py
+```
+
+```python
+from dee import DiversifiedExpertEnsemble, PanelSplit
+
+train = PanelSplit(X_train, y_train)   # MultiIndex (datetime, instrument)
+valid = PanelSplit(X_valid, y_valid)
+
+model = DiversifiedExpertEnsemble().fit(train, valid)
+scores = model.predict(PanelSplit(X_test))
+```
+
+No data source is bundled. `PanelSplit` accepts any pandas objects that follow
+the documented index convention.
+
+## Data Format
+
+`PanelSplit` requires:
+
+- a two-level `pandas.MultiIndex` with level 0 = `datetime` and level 1 = `instrument`;
+- numeric feature columns;
+- a numeric label series with the same index (forward returns).
+
+Feature values must be finite. Labels may contain NaN at the end of the sample;
+remove those rows explicitly:
+
+```python
+split = PanelSplit(features, labels).dropna()     # drop rows with missing labels
+split = PanelSplit(features, labels).fillna(0.0)  # explicit zero fill
+```
+
+Prediction-only splits do not need labels: `PanelSplit(X_test)`.
+
+## Built-in Predictors
+
+| Name | Description | Explicit penalty |
+|---|---|---|
+| `linear` | Unregularized linear expert | — |
+| `ridge` | Linear expert with L2 penalty | `‖w‖²` |
+| `lasso` | Linear expert with L1 penalty | `‖w‖₁` |
+| `elastic_net` | Linear expert mixing L1 and L2 | `ρ‖w‖₁ + (1−ρ)‖w‖²` |
+| `mlp` | Shallow MLP with batch normalization | — |
+| `soft_tree` | Soft decision tree with sigmoid gates | — |
+
+Experts with an explicit penalty disable the optimizer's weight decay to avoid
+double regularization.
+
+## Defining a Custom Predictor
+
+```python
+import torch.nn as nn
+from dee.predictors import BasePredictor, register_predictor
+
+@register_predictor("tiny_mlp")
+class TinyMLP(BasePredictor):
+    def __init__(self, input_dim, hidden=16, **kwargs):
+        super().__init__(input_dim)
+        self.net = nn.Sequential(
+            nn.Linear(input_dim, hidden),
+            nn.ReLU(),
+            nn.Linear(hidden, 1),
+        )
+
+    def forward(self, x):
+        return self.net(x).squeeze(-1)
+
+model = DiversifiedExpertEnsemble(
+    predictor_specs={"tiny_mlp": 4, "linear": 2},
+    predictor_kwargs={"tiny_mlp": {"hidden": 64}},
+)
+```
+
+See `examples/custom_predictor.py` for a complete runnable example.
+
+## Default Hyperparameters
+
+Defaults reproduce the paper configuration.
+
+| Parameter | Value |
+|---|---|
+| `predictor_specs` | 10 linear, 2 ridge, 5 lasso, 3 elastic net, 15 MLP, 15 soft tree |
+| `feature_subsample_ratio` (γ) | 0.5 |
+| `bootstrap_ratio` (β) | 0.8789 |
+| `ic_filter_std` (κ) | 1.5 |
+| `alpha` | 1e-3 |
+| `lr` | 1e-3 |
+| `weight_decay` | 1e-4 |
+| `batch_size` | 8192 |
+| `max_steps` | 8000 |
+| `eval_steps` | 20 |
+| `early_stop_rounds` | 50 |
+| `dropout` | 0.0 |
+| `mlp_hidden` | (32,) |
+| `soft_tree_depth` | 12 |
+
+The full configuration uses 50 experts and depth-12 trees. For a quick CPU run,
+reduce `predictor_specs`, `max_steps` and `soft_tree_depth` as in the examples.
+`SoftTreePredictor` additionally accepts `max_leaves` (default 4096) as a hard
+cap; a depth that would exceed it is truncated with a warning.
+
+## Evaluation and Backtest
+
+```python
+from dee.metrics import daily_ic, daily_rank_ic, summarize_ic
+from dee.backtest import topk_backtest
+
+ic = summarize_ic(daily_ic(scores, test_labels))
+rank_ic = summarize_ic(daily_rank_ic(scores, test_labels))
+result = topk_backtest(scores, test_labels, k=50)
+print(result.metrics)
+```
+
+`topk_backtest` expects **forward** returns aligned to the same dates as the
+scores. Annualization uses 242 trading days by default.
+
+## Tests
+
+```bash
+pip install -e ".[dev]"
+pytest -q
+```
+
+## Changes from the Internal Research Code
+
+The released code differs from the internal experiment scripts in three
+substantive ways:
+
+1. The information-coefficient filter now uses per-date cross-sectional RankIC
+   rather than a pooled correlation over the whole validation set.
+2. Batch sampling walks a shuffled bootstrap pool once per epoch instead of
+   resampling with replacement at every step.
+3. All Qlib and MLflow dependencies were removed; data enters through
+   `PanelSplit`.
+
+## Citation
+
+```bibtex
+@inproceedings{li2026dee,
+  title     = {Diversification Across Predictors: Heterogeneous Ensemble Learning
+               for Cross-Sectional Return Prediction},
+  author    = {Li, Danning},
+  booktitle = {Proceedings of the 7th ACM International Conference on AI in Finance},
+  year      = {2026},
+  note      = {arXiv:XXXX.XXXXX}
+}
+```
+
+## License
+
+MIT. See `LICENSE`.
+
+## Contact
+
+Danning Li — dli381@connect.hkust-gz.edu.cn
