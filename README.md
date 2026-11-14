@@ -1,37 +1,75 @@
-# Diversified Expert Ensemble (DEE)
+<h1 align="center">Diversification Across Predictors: Heterogeneous Ensemble Learning for Cross-Sectional Return Prediction</h1>
 
-A reference implementation of **Diversification Across Predictors: Heterogeneous
-Ensemble Learning for Cross-Sectional Return Prediction**.
+<h3 align="center">ICAIF 2026 · The 7th ACM International Conference on AI in Finance</h3>
 
-📄 **Paper**: [arXiv:2611.12389](https://arxiv.org/abs/2611.12389)
+<p align="center">
+  <a href="https://arxiv.org/abs/2611.12389"><img src="https://img.shields.io/badge/Paper-B31B1B?style=for-the-badge&logo=arxiv&logoColor=white" alt="Paper"></a>
+  <a href="https://github.com/danninglee/dee"><img src="https://img.shields.io/badge/Code-181717?style=for-the-badge&logo=github&logoColor=white" alt="Code"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue?style=for-the-badge" alt="License"></a>
+</p>
 
-## Overview
+<p align="center">
+  <a href="https://github.com/danninglee">Danning Li</a><sup>1</sup>
+</p>
 
-DEE combines linear and nonlinear predictors trained on independently
-bootstrap-sampled rows and randomly subsampled feature views. Averaging weakly
-correlated errors reduces variance in the same way that diversifying assets
-reduces portfolio risk. A validation-based information-coefficient filter
-removes degenerate experts before the final equal-weight aggregation.
+<p align="center">
+  <sup>1</sup>The Hong Kong University of Science and Technology (Guangzhou)
+</p>
 
-The implementation follows Algorithm 1 of the paper: every expert is updated
-inside one synchronous loop, and early stopping monitors the ensemble-level
-validation loss.
+_DEE diversifies across predictors: heterogeneous linear and nonlinear experts are
+trained on independently bootstrap-sampled rows and random feature views; a
+validation-based RankIC filter removes degenerate experts, and equal-weight
+averaging reduces prediction variance the way diversifying assets reduces
+portfolio risk._
 
-## Installation
+## Intro
+
+Cross-sectional return prediction is a low-signal-to-noise learning problem in
+which a single predictor's error is dominated by variance. Ensembles built from
+homogeneous models share the same inductive bias, so their errors remain strongly
+correlated and the achievable variance reduction is limited. We propose the
+**Diversified Expert Ensemble (DEE)**, which transfers the principle of portfolio
+diversification from assets to predictors. DEE combines linear experts
+(unregularized linear, ridge, lasso, and elastic net) with nonlinear experts
+(shallow MLPs with batch normalization and soft decision trees with sigmoid
+gates). Every expert is trained on independently bootstrap-sampled rows
+(ratio β) and a randomly subsampled feature view (ratio γ), so that expert errors
+are weakly correlated by construction; averaging them reduces prediction variance
+in the same way that diversifying assets reduces portfolio risk. Before the final
+equal-weight aggregation, a validation-based information-coefficient filter
+(per-date cross-sectional RankIC, threshold parameter κ) removes degenerate
+experts. The implementation follows Algorithm 1 of the paper: all experts are
+updated inside one synchronous training loop, and early stopping monitors the
+ensemble-level validation loss rather than individual experts. The default
+configuration uses 50 experts and reproduces the paper setting.
+
+## News
+
+- **2026-11**: The paper is available on [arXiv](https://arxiv.org/abs/2611.12389), and the reference implementation is open-sourced.
+
+## Quick Start
+
+### Environment
 
 ```bash
 git clone https://github.com/danninglee/dee.git
 cd dee
+
+conda create -n dee python=3.10 -y
+conda activate dee
 pip install -e .
 ```
 
-Requirements: Python ≥ 3.9, NumPy, pandas, SciPy, PyTorch.
+Requirements: Python ≥ 3.9, NumPy, pandas, SciPy, PyTorch. No data source is
+bundled.
 
-## Quick Start
+### Synthetic Demo
 
 ```bash
 python examples/synthetic_demo.py
 ```
+
+### Fit and Predict
 
 ```python
 from dee import DiversifiedExpertEnsemble, PanelSplit
@@ -43,8 +81,8 @@ model = DiversifiedExpertEnsemble().fit(train, valid)
 scores = model.predict(PanelSplit(X_test))
 ```
 
-No data source is bundled. `PanelSplit` accepts any pandas objects that follow
-the documented index convention.
+`PanelSplit` accepts any pandas objects that follow the documented index
+convention.
 
 ## Data Format
 
@@ -155,8 +193,8 @@ pytest -q
 
 ## Changes from the Internal Research Code
 
-The released code differs from the internal experiment scripts in three
-substantive ways:
+For transparency and reproducibility, we document that the released code differs
+from the internal experiment scripts in three substantive ways:
 
 1. The information-coefficient filter now uses per-date cross-sectional RankIC
    rather than a pooled correlation over the whole validation set.
@@ -164,6 +202,17 @@ substantive ways:
    resampling with replacement at every step.
 3. All Qlib and MLflow dependencies were removed; data enters through
    `PanelSplit`.
+
+## License
+
+The source code in this repository is released under the **MIT License** — see
+[`LICENSE`](LICENSE).
+
+**Intellectual property.** The MIT license covers the software only. The paper,
+its figures, and other manuscript materials remain under their respective
+copyright terms (arXiv / ACM) and are not relicensed under MIT. If you use DEE,
+build upon this implementation, or reproduce results from the paper, please cite
+the work below.
 
 ## Citation
 
@@ -177,10 +226,6 @@ substantive ways:
   note      = {arXiv:2611.12389}
 }
 ```
-
-## License
-
-MIT. See `LICENSE`.
 
 ## Contact
 
