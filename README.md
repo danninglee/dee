@@ -3,9 +3,7 @@
 A reference implementation of **Diversification Across Predictors: Heterogeneous
 Ensemble Learning for Cross-Sectional Return Prediction**.
 
-> 📄 **Paper**: [arXiv:XXXX.XXXXX](https://arxiv.org/abs/XXXX.XXXXX)  <!-- TODO: replace -->
->
-> 🌐 **Project page**: [https://example.org/dee](https://example.org/dee)  <!-- TODO: replace -->
+📄 **Paper**: [arXiv:2611.12389](https://arxiv.org/abs/2611.12389)
 
 ## Overview
 
@@ -22,7 +20,7 @@ validation loss.
 ## Installation
 
 ```bash
-git clone https://github.com/<your-account>/dee.git
+git clone https://github.com/danninglee/dee.git
 cd dee
 pip install -e .
 ```
@@ -170,13 +168,13 @@ substantive ways:
 ## Citation
 
 ```bibtex
-@inproceedings{li2026dee,
+@inproceedings{li2026diversification,
   title     = {Diversification Across Predictors: Heterogeneous Ensemble Learning
                for Cross-Sectional Return Prediction},
   author    = {Li, Danning},
   booktitle = {Proceedings of the 7th ACM International Conference on AI in Finance},
   year      = {2026},
-  note      = {arXiv:XXXX.XXXXX}
+  note      = {arXiv:2611.12389}
 }
 ```
 
