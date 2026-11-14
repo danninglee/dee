@@ -6,7 +6,7 @@ authors:
     given-names: "Danning"
 version: 0.1.0
 license: MIT
-repository-code: "https://github.com/<your-account>/dee"
+repository-code: "https://github.com/danninglee/dee"
 preferred-citation:
   type: conference-paper
   title: "Diversification Across Predictors: Heterogeneous Ensemble Learning for Cross-Sectional Return Prediction"
@@ -19,4 +19,4 @@ preferred-citation:
     start: 2026-11-14
     end: 2026-11-17
   year: 2026
-  notes: "arXiv:XXXX.XXXXX"
+  notes: "arXiv:2611.12389"
